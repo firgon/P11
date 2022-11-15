@@ -1,0 +1,4 @@
+[run]
+omit = tests/*
+omit = env/*
+omit = .gitignore
