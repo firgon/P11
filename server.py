@@ -30,8 +30,7 @@ def index():
 
 @app.route('/showSummary', methods=['POST'])
 def show_summary():
-    club = [club for club in clubs if club['email'] == request.form['email']][
-        0]
+    club = get_club_with('email', request.form['email'])
     return render_template('welcome.html', club=club,
                            competitions=competitions)
 
@@ -50,12 +49,20 @@ def book(competition, club):
                                competitions=competitions)
 
 
-def get_competition_with_name(name):
-    return [comp for comp in competitions if comp['name'] == name][0]
+def get_club_with(criteria: str, value):
+    """Returns first club found where value corresponds to criteria"""
+    return [club for club in clubs if club[criteria] == value][0]
 
 
 def get_club_with_name(name):
-    return [club for club in clubs if club['name'] == name][0]
+    """Returns first club found where name corresponds to name in db
+    (shortcut for get_club_with function)"""
+    return get_club_with('name', name)
+
+
+def get_competition_with_name(name):
+    """Returns first competition where name corresponds to name in params"""
+    return [comp for comp in competitions if comp['name'] == name][0]
 
 
 @app.route('/purchasePlaces', methods=['POST'])
