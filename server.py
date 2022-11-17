@@ -1,5 +1,6 @@
 import json
-from flask import Flask, render_template, request, redirect, flash, url_for
+from flask import Flask, render_template, request, redirect, \
+    flash, url_for, abort
 
 
 def load_clubs():
@@ -31,13 +32,18 @@ def index():
 @app.route('/showSummary', methods=['POST'])
 def show_summary():
     club = get_club_with('email', request.form['email'])
-    return render_template('welcome.html', club=club,
-                           competitions=competitions)
+    if club is None:
+        flash("You are not registered. You can't connect.")
+        abort(403)
+        return redirect(url_for('index'))
+    else:
+        return render_template('welcome.html', club=club,
+                               competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
-    found_club = get_club_with_name(club)
+    found_club = get_club_with('name', club)
     found_competition = get_competition_with_name(competition)
 
     if found_club and found_competition:
@@ -51,13 +57,12 @@ def book(competition, club):
 
 def get_club_with(criteria: str, value):
     """Returns first club found where value corresponds to criteria"""
-    return [club for club in clubs if club[criteria] == value][0]
 
-
-def get_club_with_name(name):
-    """Returns first club found where name corresponds to name in db
-    (shortcut for get_club_with function)"""
-    return get_club_with('name', name)
+    for club in clubs:
+        if club[criteria] == value:
+            return club
+    else:
+        return None
 
 
 def get_competition_with_name(name):
@@ -68,7 +73,7 @@ def get_competition_with_name(name):
 @app.route('/purchasePlaces', methods=['POST'])
 def purchase_places():
     competition = get_competition_with_name(request.form['competition'])
-    club = get_club_with_name(request.form['club'])
+    club = get_club_with('name', request.form['club'])
     places_required = int(request.form['places'])
     competition['numberOfPlaces'] = int(
         competition['numberOfPlaces']) - places_required
