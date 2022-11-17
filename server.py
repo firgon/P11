@@ -3,12 +3,14 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 
 
 def load_clubs():
+    """ Loads club from json file : clubs.json """
     with open('clubs.json') as c:
         list_of_clubs = json.load(c)['clubs']
         return list_of_clubs
 
 
 def load_competitions():
+    """ Loads competitions from json file : competitions.json """
     with open('competitions.json') as comps:
         list_of_competitions = json.load(comps)['competitions']
         return list_of_competitions
@@ -36,9 +38,9 @@ def show_summary():
 
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
-    found_club = [c for c in clubs if c['name'] == club][0]
-    found_competition = [c for c in competitions if c['name'] == competition][
-        0]
+    found_club = get_club_with_name(club)
+    found_competition = get_competition_with_name(competition)
+
     if found_club and found_competition:
         return render_template('booking.html', club=found_club,
                                competition=found_competition)
