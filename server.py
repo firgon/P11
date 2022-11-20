@@ -21,6 +21,7 @@ app.secret_key = 'something_special'
 
 competitions = load_competitions()
 clubs = load_clubs()
+MAX_BOOKING = 12
 
 
 @app.route('/')
@@ -65,16 +66,45 @@ def get_competition_with_name(name):
     return [comp for comp in competitions if comp['name'] == name][0]
 
 
+class OverbookingError(ValueError):
+    """Personnalized class generated when a club try
+    to book more places than possible"""
+
+    def __init__(self, available, required):
+        self.available = available
+        self.required = required
+
+    def __str__(self):
+        if self.required > MAX_BOOKING:
+            explanation = f"alors que vous ne pouvez en réserver " \
+                          f"que {MAX_BOOKING} maximum."
+        else:
+            explanation = f"alors qu'il n'y en a que " \
+                          f"{self.available} disponibles."
+        return f"Vous demandez {self.required} places, {explanation}"
+
+
 @app.route('/purchasePlaces', methods=['POST'])
 def purchase_places():
     competition = get_competition_with_name(request.form['competition'])
     club = get_club_with_name(request.form['club'])
-    places_required = int(request.form['places'])
-    competition['numberOfPlaces'] = int(
-        competition['numberOfPlaces']) - places_required
-    flash('Great-booking complete!')
-    return render_template('welcome.html', club=club,
-                           competitions=competitions)
+    try:
+        places_required = int(request.form['places'])
+        if places_required <= min(competition['numberOfPlaces'], 12):
+            competition['numberOfPlaces'] = \
+                int(competition['numberOfPlaces']) - places_required
+            flash('Great-booking complete!')
+        else:
+            raise OverbookingError(competition['numberOfPlaces'],
+                                   places_required)
+    except OverbookingError() as e:
+        flash(e)
+    except ValueError():
+        flash(f"BAD REQUEST: {request.form['places']} seems to be "
+              f"an incorrect value")
+    finally:
+        return render_template('welcome.html', club=club,
+                               competitions=competitions)
 
 
 # TODO: Add route for points display
