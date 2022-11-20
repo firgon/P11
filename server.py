@@ -49,9 +49,18 @@ def book(competition, club):
                                competitions=competitions)
 
 
+def get_object_with(objects: list[dict], criteria: str, value: str) -> dict:
+    """Return first club or competition with value corresponding to criteria"""
+    for element in objects:
+        if criteria in element.keys() and element[criteria] == value:
+            return element
+    else:
+        return None
+
+
 def get_club_with(criteria: str, value):
-    """Returns first club found where value corresponds to criteria"""
-    return [club for club in clubs if club[criteria] == value][0]
+    """short cut for getting a club with get_object_with function"""
+    return get_object_with(clubs, criteria, value)
 
 
 def get_club_with_name(name):
@@ -61,8 +70,8 @@ def get_club_with_name(name):
 
 
 def get_competition_with_name(name):
-    """Returns first competition where name corresponds to name in params"""
-    return [comp for comp in competitions if comp['name'] == name][0]
+    """short cut for getting a competition with get_object_with function"""
+    return get_object_with(competitions, 'name', name)
 
 
 @app.route('/purchasePlaces', methods=['POST'])
