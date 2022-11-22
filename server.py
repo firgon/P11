@@ -31,8 +31,12 @@ def index():
 @app.route('/showSummary', methods=['POST'])
 def show_summary():
     club = get_club_with('email', request.form['email'])
-    return render_template('welcome.html', club=club,
-                           competitions=competitions)
+    if club is None:
+        flash("You are not registered. You can't connect.")
+        return redirect(url_for('index'))
+    else:
+        return render_template('welcome.html', club=club,
+                               competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
